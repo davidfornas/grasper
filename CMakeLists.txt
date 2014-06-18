@@ -45,8 +45,7 @@ include_directories(
 
 
 add_library(grasper src/joint_offset.cpp)
-
-
+target_link_libraries( grasper ${catkin_LIBRARIES})
 
 add_executable(turn_valve_server src/turn_valve_server.cpp)
 target_link_libraries( turn_valve_server grasper ${catkin_LIBRARIES})
@@ -60,6 +59,8 @@ target_link_libraries( hot_stab_server grasper ${catkin_LIBRARIES})
 add_executable(hot_stab_client src/hot_stab_client.cpp)
 target_link_libraries( hot_stab_client grasper ${catkin_LIBRARIES})
 
+add_executable(get_bMc src/get_bMc.cpp)
+target_link_libraries( get_bMc grasper ${catkin_LIBRARIES})
 
 
 #############
