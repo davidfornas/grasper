@@ -62,6 +62,8 @@ target_link_libraries( hot_stab_client grasper ${catkin_LIBRARIES})
 add_executable(get_bMc src/get_bMc.cpp)
 target_link_libraries( get_bMc grasper ${catkin_LIBRARIES})
 
+add_executable(move src/move.cpp)
+target_link_libraries( move grasper ${catkin_LIBRARIES})
 
 #############
 ## Install ##

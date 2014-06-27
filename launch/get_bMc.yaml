@@ -1,0 +1,10 @@
+initial_posture: [0.0, 0.68, 1.23, 0.0, 0.0]
+
+#unused
+waypoint_pre_pre: [0.0, 0.4, 1.13, 0.0, 0.0]
+waypoint_undock: [0.0, 0.25, 1.5, 0.0, 0.0]
+waypoint_pre: [0.0, 0.0, -0.03, 0.0, 0.0, 0.0]
+waypoint_man: [0.0, 0.0, 0.08, 0.0, 0.0, 0.0]
+waypoint_ext: [0.0, 0.0, -0.08, 0.0, 0.0, 0.0]
+waypoint_ins: [0.0, 0.01, 0.09, 0.0, 0.0, 0.0]
+
