@@ -19,6 +19,8 @@
 	 <param name="velocity_aperture" value="$(arg velocity_aperture)" />
 	 <param name="gripper_manipulation" value="$(arg gripper_manipulation)" />
 	 <param name="gripper_opened" value="$(arg gripper_closed)" />
+   <!--<include file="$(find triton_launchfiles)/launch/ar_marker_endeffector.launch" />
+   <include file="$(find videre_stereo_cam)/launch/videre_right_mono_image_proc.launch" />-->
 
 <node name="get_bMc" pkg="grasper" type="get_bMc" respawn="false" output="screen" />
 

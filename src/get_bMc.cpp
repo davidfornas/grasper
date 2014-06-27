@@ -14,7 +14,6 @@
 #include <std_srvs/Empty.h>
 
 
-ros::NodeHandle nh_;
 
 	vpColVector initial_posture_;
 
@@ -22,7 +21,7 @@ ros::NodeHandle nh_;
 	JointOffset* joint_offset_;
 	ARM5Arm* robot_;
 
-	void init(std::string name){
+	void init(std::string name, ros::NodeHandle nh_ ){
 	
 
 		nh_.getParam("joint_state", joint_state_);
@@ -41,7 +40,9 @@ ros::NodeHandle nh_;
 int main(int argc, char** argv){
 	ros::init(argc, argv, "get_bMc");
 	//HotStab hotStab(ros::this_node::getName());
-    init(ros::this_node::getName());
+	
+    ros::NodeHandle nh_;
+    init(ros::this_node::getName(), nh_);
     ROS_INFO("Initializing Joint Offset (bMc)");    
     joint_offset_->reset_bMc(initial_posture_);
     vpHomogeneousMatrix bMc;
@@ -51,4 +52,14 @@ int main(int argc, char** argv){
 		ROS_INFO("bMC not found");
 	ros::spin();
 	return 0;
+	
+	/* First bMc found for reference only
+	 * 0.03905909885  0.7491046278  0.6612992087  -0.2960783322  
+-0.9991522374  0.03789416151  0.01608847269  -0.06422862159  
+-0.01300742967  -0.6613669853  0.7499496767  0.3065145907  
+0  0  0  1
+*/
+	
+	
+	
 	}

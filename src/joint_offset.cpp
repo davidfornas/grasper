@@ -186,7 +186,7 @@ int JointOffset::reset_bMc(vpColVector initial_posture){
 	time=ros::Time::now();
 	while(!cMm_found && (ros::Time::now()-time).toSec()<5){
 		try{
-			listener.lookupTransform("/stereo_down_optical", "/ee_marker", ros::Time(0), cMm_tf);
+			listener.lookupTransform("/stereo_optical_frame", "/ee_marker", ros::Time(0), cMm_tf);
 			cMm_found=true;
 		}
 		catch(tf::TransformException & ex){
