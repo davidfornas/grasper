@@ -28,7 +28,7 @@
 		nh_.getParam("joint_state_command", joint_state_command_);
 		nh_.getParam("joint_state_fixed", joint_state_fixed_);
 
-		initial_posture_=mar_params::paramToVispColVector(&nh_, "initial_posture");
+		//initial_posture_=mar_params::paramToVispColVector(&nh_, "initial_posture");
 
 
 
@@ -43,13 +43,19 @@ int main(int argc, char** argv){
 	
     ros::NodeHandle nh_;
     init(ros::this_node::getName(), nh_);
+    
     ROS_INFO("Initializing Joint Offset (bMc)");    
-    joint_offset_->reset_bMc(initial_posture_);
+    joint_offset_->reset_bMc2();
     vpHomogeneousMatrix bMc;
     if(joint_offset_->get_bMc(bMc)==0)
 		ROS_INFO_STREAM("bMc is: " << std::endl << bMc);
 	else
 		ROS_INFO("bMC not found");
+	vpHomogeneousMatrix bMc_right;
+    if(joint_offset_->get_bMc_right(bMc_right)==0)
+		ROS_INFO_STREAM("bMc_right is: " << std::endl << bMc_right);
+	else
+		ROS_INFO("bMc_right not found");
 	ros::spin();
 	return 0;
 	

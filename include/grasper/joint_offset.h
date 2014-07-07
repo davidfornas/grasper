@@ -17,7 +17,7 @@ class JointOffset{
 	ros::NodeHandle nh_;
 	ARM5Arm *robot;
 	vpColVector offset_;
-	vpHomogeneousMatrix bMc;
+	vpHomogeneousMatrix bMc, bMc_right;
 	tf::StampedTransform cMm_tf;
 	bool cMm_found;
 	bool bMc_init;
@@ -35,10 +35,19 @@ class JointOffset{
 
 public:
 	int reset_bMc(vpColVector initial_posture);
+	int reset_bMc2();
+	
 	JointOffset(ros::NodeHandle& nh, std::string topic_joint_state, std::string topic_command_joint, std::string topic_joint_state_fixed);
 	int get_bMc(vpHomogeneousMatrix &bMc_ret){
 		if(bMc_init){
 			bMc_ret=bMc;
+			return 0;
+		}
+		return -1;
+	}
+	int get_bMc_right(vpHomogeneousMatrix &bMc_ret){
+		if(bMc_init){
+			bMc_ret=bMc_right;
 			return 0;
 		}
 		return -1;

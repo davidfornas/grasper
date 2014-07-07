@@ -172,7 +172,9 @@ vpHomogeneousMatrix JointOffset::markerToEndEffector(tf::Transform cMm_tf){
 
 int JointOffset::reset_bMc(vpColVector initial_posture){
 	vpColVector current_joints;
+	
 	robot->getJointValues(current_joints);
+	
 	if(initial_posture.size()!=5)
 		initial_posture=current_joints;
 	while((initial_posture-current_joints).euclideanNorm()>0.02 && ros::ok()){
@@ -181,6 +183,7 @@ int JointOffset::reset_bMc(vpColVector initial_posture){
 		robot->getJointValues(current_joints);
 		std::cout<<(initial_posture-current_joints).euclideanNorm()<<std::endl;
 	}
+	
 	cMm_found=false;
 	ros::Time time;
 	time=ros::Time::now();
@@ -207,6 +210,70 @@ int JointOffset::reset_bMc(vpColVector initial_posture){
 	bMc=bMe*cMe.inverse();
 
 	bMc_init=true;
+
+	return 0;
+}
+
+int JointOffset::reset_bMc2(){
+	/*vpColVector current_joints;
+	
+	robot->getJointValues(current_joints);
+	
+	if(initial_posture.size()!=5)
+		initial_posture=current_joints;
+	while((initial_posture-current_joints).euclideanNorm()>0.02 && ros::ok()){
+		robot->setJointVelocity(initial_posture-current_joints);
+		ros::spinOnce();
+		robot->getJointValues(current_joints);
+		std::cout<<(initial_posture-current_joints).euclideanNorm()<<std::endl;
+	}
+	*/
+	cMm_found=false;
+	ros::Time time;
+	time=ros::Time::now();
+	while(!cMm_found && (ros::Time::now()-time).toSec()<5){
+		try{
+			listener.lookupTransform("/stereo_optical_frame", "/ee_marker", ros::Time(0), cMm_tf);
+			cMm_found=true;
+		}
+		catch(tf::TransformException & ex){
+			std::cerr<<"cMm not found"<<std::endl;
+		}
+		ros::spinOnce();
+	}
+	if(!cMm_found){
+		std::cerr<<"cMm not found in 5 seconds"<<std::endl;
+		return -1;
+	}
+	vpHomogeneousMatrix cMe, bMe;
+
+	cMe=markerToEndEffector(cMm_tf);
+	robot->getPosition(bMe);
+
+	bMc=bMe*cMe.inverse();
+
+	bMc_init=true;
+
+	cMm_found=false;
+	time=ros::Time::now();
+	while(!cMm_found && (ros::Time::now()-time).toSec()<5){
+		try{
+			listener.lookupTransform("/stereo_optical_frame", "/ee_marker_right", ros::Time(0), cMm_tf);
+			cMm_found=true;
+		}
+		catch(tf::TransformException & ex){
+			std::cerr<<"cMm right not found"<<std::endl;
+		}
+		ros::spinOnce();
+	}
+	if(!cMm_found){
+		std::cerr<<"cMm right not found in 5 seconds"<<std::endl;
+		return -1;
+	}
+	cMe=markerToEndEffector(cMm_tf);
+	robot->getPosition(bMe);
+
+	bMc_right=bMe*cMe.inverse();
 
 	return 0;
 }
