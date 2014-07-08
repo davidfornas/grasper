@@ -11,6 +11,7 @@ void JointOffset::readJointsCallback(const sensor_msgs::JointState::ConstPtr& m)
 		}
 		joints_fixed.header.stamp=ros::Time::now();
 		joint_state_pub.publish(joints_fixed);
+		v.publish();
 	}
 }
 
@@ -66,7 +67,7 @@ void JointOffset::markerCallback(const geometry_msgs::PoseStamped::ConstPtr &m){
 	}
 }*/
 
-JointOffset::JointOffset(ros::NodeHandle& nh, std::string topic_joint_state, std::string topic_command_joint, std::string topic_joint_state_fixed): nh_(nh){
+JointOffset::JointOffset(ros::NodeHandle& nh, std::string topic_joint_state, std::string topic_command_joint, std::string topic_joint_state_fixed, bool averaging_bMc ): nh_(nh){
 	robot=new ARM5Arm(nh_, topic_joint_state, topic_command_joint);
 	joint_state_sub=nh.subscribe<sensor_msgs::JointState>(topic_joint_state, 1, &JointOffset::readJointsCallback, this);
 	marker_sub=nh.subscribe<geometry_msgs::PoseStamped>("/marker_filter_node/marker_pose", 1, &JointOffset::markerCallback, this);
@@ -76,9 +77,8 @@ JointOffset::JointOffset(ros::NodeHandle& nh, std::string topic_joint_state, std
 	bMc_init=false;
 	offset_.resize(5);
 	offset_=0;
-
-
-
+	averaging_bMc=averaging_bMc;
+	v.addTransform( bMc, "arm5e/kinematic_base", "stereo");
 }
 
 vpHomogeneousMatrix JointOffset::markerToEndEffector(tf::Transform cMm_tf){
@@ -169,7 +169,6 @@ vpHomogeneousMatrix JointOffset::markerToEndEffector(tf::Transform cMm_tf){
 }
 
 
-
 int JointOffset::reset_bMc(vpColVector initial_posture){
 	vpColVector current_joints;
 	
@@ -183,13 +182,18 @@ int JointOffset::reset_bMc(vpColVector initial_posture){
 		robot->getJointValues(current_joints);
 		std::cout<<(initial_posture-current_joints).euclideanNorm()<<std::endl;
 	}
+	return reset_bMc();
+	
+}
+	
+int JointOffset::reset_bMc(){
 	
 	cMm_found=false;
 	ros::Time time;
 	time=ros::Time::now();
 	while(!cMm_found && (ros::Time::now()-time).toSec()<5){
 		try{
-			listener.lookupTransform("/stereo_optical_frame", "/ee_marker", ros::Time(0), cMm_tf);
+			listener.lookupTransform("stereo", "ee_marker", ros::Time(0), cMm_tf);
 			cMm_found=true;
 		}
 		catch(tf::TransformException & ex){
@@ -209,13 +213,15 @@ int JointOffset::reset_bMc(vpColVector initial_posture){
 
 	bMc=bMe*cMe.inverse();
 
-	bMc_init=true;
-
+	bMc_init=true;    
+	v.resetTransform( bMc );
+	
 	return 0;
 }
 
-int JointOffset::reset_bMc2(){
-	/*vpColVector current_joints;
+int JointOffset::reset_bMc_two_cams(vpColVector initial_posture){
+	
+	vpColVector current_joints;
 	
 	robot->getJointValues(current_joints);
 	
@@ -227,13 +233,18 @@ int JointOffset::reset_bMc2(){
 		robot->getJointValues(current_joints);
 		std::cout<<(initial_posture-current_joints).euclideanNorm()<<std::endl;
 	}
-	*/
+	return reset_bMc_two_cams();
+	
+}
+
+int JointOffset::reset_bMc_two_cams(){
+	
 	cMm_found=false;
 	ros::Time time;
 	time=ros::Time::now();
 	while(!cMm_found && (ros::Time::now()-time).toSec()<5){
 		try{
-			listener.lookupTransform("/stereo_optical_frame", "/ee_marker", ros::Time(0), cMm_tf);
+			listener.lookupTransform("stereo", "ee_marker", ros::Time(0), cMm_tf);
 			cMm_found=true;
 		}
 		catch(tf::TransformException & ex){
@@ -254,26 +265,69 @@ int JointOffset::reset_bMc2(){
 
 	bMc_init=true;
 
-	cMm_found=false;
+	cMm_found_right=false;
 	time=ros::Time::now();
-	while(!cMm_found && (ros::Time::now()-time).toSec()<5){
+	while(!cMm_found_right && (ros::Time::now()-time).toSec()<5){
 		try{
-			listener.lookupTransform("/stereo_optical_frame", "/ee_marker_right", ros::Time(0), cMm_tf);
-			cMm_found=true;
+			listener.lookupTransform("stereo", "ee_marker_right", ros::Time(0), cMm_tf);
+			cMm_found_right=true;
 		}
 		catch(tf::TransformException & ex){
 			std::cerr<<"cMm right not found"<<std::endl;
 		}
 		ros::spinOnce();
 	}
-	if(!cMm_found){
+	if(!cMm_found_right){
 		std::cerr<<"cMm right not found in 5 seconds"<<std::endl;
 		return -1;
 	}
 	cMe=markerToEndEffector(cMm_tf);
 	robot->getPosition(bMe);
 
-	bMc_right=bMe*cMe.inverse();
+	bMc_right=bMe*cMe.inverse();  
+	
+	/// @todo If average_bMc, publish it... by the moment publish left bMc.  
+	v.resetTransform( bMc );
 
 	return 0;
+}
+
+void JointOffset::compute_average_bMc(){
+	
+	/// @todo Move to utils library
+	vpTranslationVector t1, t2;
+    bMc.extract(t1);bMc_right.extract(t2);
+
+    vpQuaternionVector r1, r2;
+    bMc.extract(r1);bMc_right.extract(r2);
+    tf::Quaternion rotation1( r1.x(), r1.y(), r1.z(), r1.w());
+    tf::Quaternion rotation2( r2.x(), r2.y(), r2.z(), r2.w());
+
+    double mean_x = (t1[0]+t2[0]) / 2;
+    double mean_y = (t1[1]+t2[1]) / 2;
+    double mean_z = (t1[2]+t2[2]) / 2;
+
+    tf::Matrix3x3 m1(rotation1), m2(rotation2);
+    double roll1, pitch1, yaw1, roll2, pitch2, yaw2;
+    
+    m1.getRPY(roll1, pitch1, yaw1);
+	m2.getRPY(roll2, pitch2, yaw2);
+
+    double mean_c_roll = cos(roll1) + cos(roll2);
+    double mean_s_roll = sin(roll1) + sin(roll2);
+    double mean_c_pitch = cos(pitch1) + cos(pitch2);
+    double mean_s_pitch = sin(pitch1) + sin(pitch2);
+    double mean_c_yaw = cos(yaw1) + cos(yaw2);
+    double mean_s_yaw = sin(yaw1) + sin(yaw2);
+	
+	double mean_roll = atan2(mean_s_roll, mean_c_roll);
+	double mean_pitch = atan2(mean_s_pitch, mean_c_pitch);
+	double mean_yaw = atan2(mean_s_yaw, mean_c_yaw);
+	
+	tf::Quaternion btQ;
+    btQ = tf::createQuaternionFromRPY(mean_roll, mean_pitch, mean_yaw);
+    vpTranslationVector tt(mean_x, mean_y, mean_z);
+    vpQuaternionVector qq(btQ.x(), btQ.y(), btQ.z(), btQ.w());
+    vpHomogeneousMatrix v(tt,qq);
+	average_bMc = v;	
 }

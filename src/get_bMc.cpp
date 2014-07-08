@@ -28,10 +28,6 @@
 		nh_.getParam("joint_state_command", joint_state_command_);
 		nh_.getParam("joint_state_fixed", joint_state_fixed_);
 
-		//initial_posture_=mar_params::paramToVispColVector(&nh_, "initial_posture");
-
-
-
 		joint_offset_=new JointOffset(nh_, joint_state_, joint_state_command_, joint_state_fixed_);
 		robot_=new ARM5Arm(nh_, joint_state_fixed_, joint_state_command_);
 
@@ -39,13 +35,11 @@
 
 int main(int argc, char** argv){
 	ros::init(argc, argv, "get_bMc");
-	//HotStab hotStab(ros::this_node::getName());
-	
-    ros::NodeHandle nh_;
+	ros::NodeHandle nh_;
     init(ros::this_node::getName(), nh_);
     
     ROS_INFO("Initializing Joint Offset (bMc)");    
-    joint_offset_->reset_bMc2();
+    joint_offset_->reset_bMc_two_cams();
     vpHomogeneousMatrix bMc;
     if(joint_offset_->get_bMc(bMc)==0)
 		ROS_INFO_STREAM("bMc is: " << std::endl << bMc);
