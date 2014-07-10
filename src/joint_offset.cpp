@@ -78,7 +78,7 @@ JointOffset::JointOffset(ros::NodeHandle& nh, std::string topic_joint_state, std
 	offset_.resize(5);
 	offset_=0;
 	averaging_bMc=averaging_bMc;
-	v.addTransform( bMc, "arm5e/kinematic_base", "stereo");
+	v.addTransform( bMc, "/arm5e/kinematic_base", "/stereo");
 }
 
 vpHomogeneousMatrix JointOffset::markerToEndEffector(tf::Transform cMm_tf){
@@ -193,7 +193,7 @@ int JointOffset::reset_bMc(){
 	time=ros::Time::now();
 	while(!cMm_found && (ros::Time::now()-time).toSec()<5){
 		try{
-			listener.lookupTransform("stereo", "ee_marker", ros::Time(0), cMm_tf);
+			listener.lookupTransform("/stereo", "/ee_marker", ros::Time(0), cMm_tf);
 			cMm_found=true;
 		}
 		catch(tf::TransformException & ex){
@@ -244,7 +244,7 @@ int JointOffset::reset_bMc_two_cams(){
 	time=ros::Time::now();
 	while(!cMm_found && (ros::Time::now()-time).toSec()<5){
 		try{
-			listener.lookupTransform("stereo", "ee_marker", ros::Time(0), cMm_tf);
+			listener.lookupTransform("/stereo", "/ee_marker", ros::Time(0), cMm_tf);
 			cMm_found=true;
 		}
 		catch(tf::TransformException & ex){
@@ -269,7 +269,7 @@ int JointOffset::reset_bMc_two_cams(){
 	time=ros::Time::now();
 	while(!cMm_found_right && (ros::Time::now()-time).toSec()<5){
 		try{
-			listener.lookupTransform("stereo", "ee_marker_right", ros::Time(0), cMm_tf);
+			listener.lookupTransform("/stereo", "/ee_marker_right", ros::Time(0), cMm_tf);
 			cMm_found_right=true;
 		}
 		catch(tf::TransformException & ex){
