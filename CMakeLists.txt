@@ -17,6 +17,12 @@ find_package(catkin REQUIRED COMPONENTS
   tf
 )
 
+#Library type definition needed for ESMlibrary (INRIA)
+if( CMAKE_SIZEOF_VOID_P EQUAL 8)
+  set( LIBRARY_TYPE STATIC)
+else( CMAKE_SIZEOF_VOID_P EQUAL 8)	
+  set( LIBRARY_TYPE SHARED )
+endif( CMAKE_SIZEOF_VOID_P EQUAL 8)
 
 add_action_files(
  DIRECTORY action
@@ -44,7 +50,7 @@ include_directories(
 )
 
 
-add_library(grasper src/joint_offset.cpp)
+add_library(grasper ${LIBRARY_TYPE} src/joint_offset.cpp )
 target_link_libraries( grasper ${catkin_LIBRARIES})
 
 add_executable(turn_valve_server src/turn_valve_server.cpp)
