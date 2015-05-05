@@ -17,12 +17,6 @@ find_package(catkin REQUIRED COMPONENTS
   tf
 )
 
-#Library type definition needed for ESMlibrary (INRIA)
-if( CMAKE_SIZEOF_VOID_P EQUAL 8)
-  set( LIBRARY_TYPE STATIC)
-else( CMAKE_SIZEOF_VOID_P EQUAL 8)	
-  set( LIBRARY_TYPE SHARED )
-endif( CMAKE_SIZEOF_VOID_P EQUAL 8)
 
 add_action_files(
  DIRECTORY action
@@ -38,11 +32,18 @@ generate_messages(
 
 
 catkin_package(
-
+  INCLUDE_DIRS include
+   LIBRARIES ${PROJECT_NAME}
   CATKIN_DEPENDS actionlib actionlib_msgs mar_perception mar_robot mar_robot_arm5e mar_ros_bridge message_generation roscpp rospy std_msgs std_srvs tf
-
 )
 
+
+#Library type definition needed for ESMlibrary (INRIA)
+if( CMAKE_SIZEOF_VOID_P EQUAL 8)
+  set( LIBRARY_TYPE STATIC)
+else( CMAKE_SIZEOF_VOID_P EQUAL 8)	
+  set( LIBRARY_TYPE SHARED )
+endif( CMAKE_SIZEOF_VOID_P EQUAL 8)
 
 
 include_directories(
@@ -50,8 +51,8 @@ include_directories(
 )
 
 
-add_library(grasper ${LIBRARY_TYPE} src/joint_offset.cpp )
-target_link_libraries( grasper ${catkin_LIBRARIES})
+add_library(${PROJECT_NAME} ${LIBRARY_TYPE} src/joint_offset.cpp )
+target_link_libraries( ${PROJECT_NAME} ${catkin_LIBRARIES})
 
 add_executable(turn_valve_server src/turn_valve_server.cpp)
 target_link_libraries( turn_valve_server grasper ${catkin_LIBRARIES})

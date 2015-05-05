@@ -1,5 +1,5 @@
-#ifndef JOINTOFFSET_H
-#define JOINTOFFSET_H
+#ifndef _JOINTOFFSET_H
+#define _JOINTOFFSET_H
 
 
 #include <ros/ros.h>
